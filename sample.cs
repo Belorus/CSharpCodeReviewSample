@@ -12,6 +12,11 @@ namespace MyBestApp
     public class FacebookHelper
     {
         public FacebookHelper() {}
+        
+        static FacebookHelper()
+        {
+            if (!isFacebookOk("http://www.facebook.com/")) throw new Exception("Facebook does not work!");
+        }
 
         const string App_id = "26825583368248135690";
 
@@ -63,7 +68,14 @@ namespace MyBestApp
             return await tcs.Task.ConfigureAwait(true);
         }
         
-        private void makeBrowserRequest(string url, Action<object> callback)
+        internal static Boolean isFacebookOk(String facebookUrl)
+        {
+            bool ok = false;
+            makeBrowserRequest(facebookUrl, _ => { ok = true; });
+            return ok;
+        }
+
+        private static void makeBrowserRequest(string url, Action<object> callback)
         {
             try
             {
