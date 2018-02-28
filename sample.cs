@@ -9,7 +9,7 @@ namespace MyBestApp
 {
     using System;
     
-    class FacebookHelper
+    public class FacebookHelper
     {
         public FacebookHelper() {}
 
