@@ -14,16 +14,13 @@ namespace MyBestApp
     public class FacebookHelper
     {
         public FacebookHelper() {}
-        
         static FacebookHelper() {
             if (!isFacebookOk("http://www.facebook.com/")) 
                 throw new Exception("Facebook does not work!");
         }
 
         public event EventHandler<EventArgs> Logined;
-        
         public static FacebookHelper Instance => new FacebookHelper();
-
         const string App_id = "26825583368248135690";
 
         public async void Login(int errorCode, string applicationID = App_id)
@@ -38,7 +35,6 @@ namespace MyBestApp
                 makeBrowserRequest(url, onLoginCompleted);
                 
                 m_isAuthenticating = true;
-
                 Logined(null, new EventArgs());
             }
         }
@@ -68,7 +64,6 @@ namespace MyBestApp
         private void onLoginCompleted(object loginResponse)
         {
             SessionToken = (loginResponse as HttpResponseMessage).Content.ReadAsStringAsync().Result;
-
             try {
                 SaveTokenToFile();
             }
