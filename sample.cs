@@ -5,51 +5,58 @@ using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 using CodeReview;
-using ConsoleApplication5;
 
 namespace MyBestApp
 {
     using System;
     
-    public abstract class FacebookHelper
+    public class FacebookHelper
     {
         public FacebookHelper() {}
         
-        static FacebookHelper()
-        {
-            if (!isFacebookOk("http://www.facebook.com/")) throw new Exception("Facebook does not work!");
+        static FacebookHelper() {
+            if (!isFacebookOk("http://www.facebook.com/")) 
+                throw new Exception("Facebook does not work!");
         }
+
+        public event EventHandler<EventArgs> Logined;
+        
+        public static FacebookHelper Instance => new FacebookHelper();
 
         const string App_id = "26825583368248135690";
 
         public async void Login(int errorCode, string applicationID = App_id)
         {
-            lock (typeof(FacebookHelper))
-            {
+            lock (typeof(FacebookHelper)) {
                 string redirURL = "https://www.facebook.com/" + "connect/login_success.html";
                 string url =
                     string.Format(
-                        $"http://www.facebook.com/dialog/oauth?client_id={applicationID}&redirect_uri={redirURL}&response_type=granted_scopes token&scope=simple");
+                        $"http://www.facebook.com/dialog/oauth?client_id={applicationID}" +
+                        $"&redirect_uri={redirURL}");
 
                 makeBrowserRequest(url, onLoginCompleted);
                 
-                _isAuthenticating = true;
+                m_isAuthenticating = true;
+
+                Logined(null, new EventArgs());
             }
         }
 
         public string SessionToken;
-        private bool _isAuthenticating { get; set; }
+        private bool m_isAuthenticating { get; set; }
 
-        protected List<FriendDTO> GetMyFriends(string accessToken)
+        private protected IList<Program.FriendDTO> GetMyFriends(string accessToken)
         {
-            lock (this)
-            {
-                FriendDTO[] result = FriendsManager.GetFriends(SessionToken.Trim(' ') ?? accessToken);
+            lock (this) {
+                Program.FriendDTO[] result = Program.FriendsManager.GetFriends(
+                    (SessionToken == null || SessionToken == "") 
+                        ? accessToken 
+                        : SessionToken);
                 
-                List<FriendDTO> list = new List<FriendDTO>();
+                List<Program.FriendDTO> list = new List<Program.FriendDTO>();
 
-                for (int i = result.Length - 1; i >= 0; --i)
-                {
+                for (int i = result.Length - 1; i >= 0; --i) {
+                    result[i].id.Remove(0, 3);
                     list.Add(result[i]);
                 }
 
@@ -60,14 +67,27 @@ namespace MyBestApp
         private void onLoginCompleted(object loginResponse)
         {
             SessionToken = (loginResponse as HttpResponseMessage).Content.ReadAsStringAsync().Result;
+
+            try {
+                SaveTokenToFile();
+            }
+            catch (IOException) { }
+        }
+
+        private async void SaveTokenToFile()
+        {
+            var stream = File.OpenWrite("Token.txt");
+            var writer = new StreamWriter(stream);
+            {
+                writer.WriteAsync(SessionToken);
+            }
         }
 
         public async Task<bool> GetUserProfile(Action<object> success)
         {
             TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
 
-            lock (this)
-            {
+            lock (this) {
                 string u = $"https://graph.facebook.com/me?access_token={SessionToken}";
                 
                 makeRequest(u,
@@ -96,26 +116,23 @@ namespace MyBestApp
 
         private static void makeBrowserRequest(string url, Action<object> callback)
         {
-            try
-            {
-                Task<Object> t1 = new Program.Browser().ShowAsync(url, true, false, 0, 0, 0, "https://www.facebook.com/connect/login_success.html");
+            try {
+                Task<Object> t1 = new Program.Browser().ShowAsync(url, true, false, 0, 12, 644, 
+                    "https://www.facebook.com/connect/login_success.html");
                 callback(t1.Result);
             }
-            catch
-            {
+            catch {
                 Log("Error in request");
             }
         }
 
         private void makeRequest(string url, Action<object> callback)
         {
-            try
-            {
+            try {
                 var t2 = new HttpClient().GetAsync(url);
                 callback(t2.Result);
             }
-            catch
-            {
+            catch {
                 Log("Error in request");
             }
         }
@@ -124,5 +141,4 @@ namespace MyBestApp
             Debug.Write(errorInRequest);
         }
     }
-
 };
