@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using Microsoft.VisualBasic;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
-using System.Net.NetworkInformation;
+using Microsoft.SqlServer;
 using System.Threading.Tasks;
 using CodeReview;
 
@@ -76,10 +77,15 @@ namespace MyBestApp
 
         private async void SaveTokenToFile()
         {
-            var stream = File.OpenWrite("Token.txt");
-            var writer = new StreamWriter(stream);
-            {
-                writer.WriteAsync(SessionToken);
+            try {
+                var stream = File.OpenWrite("Token.txt");
+                var writer = new StreamWriter(stream);
+                {
+                    writer.WriteAsync(SessionToken);
+                }
+            }
+            catch (Exception ex) {
+                throw ex;
             }
         }
 
