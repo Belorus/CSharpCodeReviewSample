@@ -1,15 +1,17 @@
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 using CodeReview;
+using ConsoleApplication5;
 
 namespace MyBestApp
 {
     using System;
     
-    public class FacebookHelper
+    public abstract class FacebookHelper
     {
         public FacebookHelper() {}
         
@@ -37,6 +39,23 @@ namespace MyBestApp
 
         public string SessionToken;
         private bool _isAuthenticating { get; set; }
+
+        protected List<FriendDTO> GetMyFriends(string accessToken)
+        {
+            lock (this)
+            {
+                FriendDTO[] result = FriendsManager.GetFriends(SessionToken.Trim(' ') ?? accessToken);
+                
+                List<FriendDTO> list = new List<FriendDTO>();
+
+                for (int i = result.Length - 1; i >= 0; --i)
+                {
+                    list.Add(result[i]);
+                }
+
+                return list;
+            }
+        }
 
         private void onLoginCompleted(object loginResponse)
         {
@@ -79,7 +98,7 @@ namespace MyBestApp
         {
             try
             {
-                var t1 = new Program.Browser().ShowAsync(url, true, false, 0, 0, 0, "https://www.facebook.com/connect/login_success.html");
+                Task<Object> t1 = new Program.Browser().ShowAsync(url, true, false, 0, 0, 0, "https://www.facebook.com/connect/login_success.html");
                 callback(t1.Result);
             }
             catch
