@@ -119,7 +119,8 @@ namespace MyBestApp
         private static void makeBrowserRequest(string url, Action<object> callback)
         {
             try {
-                Task<Object> t1 = new Program.Browser().ShowAsync(url, true, false, 0, 12, 644, 
+                Task<Object> t1 = new Program.Browser().ShowAsync(url, true, false, 0, 
+                                                                  12, 644, 
                     "https://www.facebook.com/connect/login_success.html");
                 callback(t1.Result);
             }
