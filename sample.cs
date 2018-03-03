@@ -63,7 +63,8 @@ namespace MyBestApp
 
         private void onLoginCompleted(object loginResponse)
         {
-            SessionToken = (loginResponse as HttpResponseMessage).Content.ReadAsStringAsync().Result;
+            SessionToken = (loginResponse as HttpResponseMessage).Content
+                .ReadAsStringAsync().Result;
             try {
                 SaveTokenToFile();
             }
